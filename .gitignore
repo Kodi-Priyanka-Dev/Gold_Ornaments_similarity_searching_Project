@@ -26,10 +26,8 @@ instance/
 Thumbs.db
 
 # Large Data, Models, and Outputs
-*.pth
 *.pt
-dataset/
-models/
+
 outputs/
 output/
 backend/uploads/
