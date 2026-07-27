@@ -68,7 +68,7 @@ else:
 
 print(f"ML Service ready. Loaded {len(image_paths)} original embeddings.")
 
-def find_similar(image_path, top_k=20, model_type="original"):
+def find_similar(image_path, top_k=20, model_type="imagenet"):
     """
     Given an image path, extracts features and computes cosine similarity
     """

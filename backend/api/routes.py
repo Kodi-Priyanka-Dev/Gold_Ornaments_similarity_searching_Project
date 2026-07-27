@@ -29,7 +29,7 @@ def search():
             return jsonify({"error": "It is not a gold ornament. Please upload a valid image of gold ornaments like bangles, necklaces, earrings, or bracelets."}), 400
 
         # 2. Run the actual ML model similarity search!
-        model_type = request.form.get('model_type', 'original')
+        model_type = request.form.get('model_type', 'imagenet')
         results = find_similar(filepath, top_k=15, model_type=model_type)
         
         # Cleanup uploaded file if desired, but we'll leave it for now

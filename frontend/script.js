@@ -120,10 +120,6 @@ async function runSearch() {
   const formData = new FormData();
   formData.append('image', selectedFile);
   
-  const modelSelect = document.getElementById('modelSelect');
-  if (modelSelect) {
-    formData.append('model_type', modelSelect.value);
-  }
 
   searchBtn.disabled = true;
   setStatus(`Searching similar images...`);
