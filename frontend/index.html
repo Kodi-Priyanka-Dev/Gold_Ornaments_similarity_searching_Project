@@ -1,106 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Ornament Similarity Search</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <main class="app-shell" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
+    <main class="app-shell">
+        <!-- Header -->
+        <header class="page-header">
+            <h1>Gold Ornament Similarity Search</h1>
+            <div class="header-divider">
+                <div class="line"></div>
+                <div class="diamond"></div>
+                <div class="line"></div>
+            </div>
+        </header>
 
-        <!-- Title Box -->
-        <div
-            style="text-align: center; border: 1px solid var(--panel-border); padding: 25px; border-radius: 12px; background: var(--panel); margin-bottom: 40px;">
-            <p class="eyebrow" style="margin-bottom: 8px;">GOLD ORNAMENTS </p>
-            <h1 style="color: #FFD700; font-size: 2.2rem; letter-spacing: 0.05em;">Gold Ornaments Similarity Searching
-            </h1>
-        </div>
+        <!-- Workflow Section -->
+        <div class="workflow-container">
+            <!-- 1. Upload -->
+            <div class="action-card glass-card">
+                <h3 class="step-title">1. Upload Image</h3>
+                <label class="drop-zone" id="dropZone" for="imageInput">
+                    <input id="imageInput" type="file" accept="image/*" hidden>
+                    <div class="upload-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <span class="action-title">Upload Image</span>
+                    <span class="action-subtitle">Drag & drop or click to select<br>JPG, PNG, WebP</span>
+                </label>
+            </div>
 
+            <!-- Arrow 1 -->
+            <div class="workflow-arrow">→</div>
 
-        <!-- 3 Column Layout Box -->
-        <div class="main-actions-row">
+            <!-- 2. Preview -->
+            <div class="action-card glass-card">
+                <h3 class="step-title">2. Uploaded Image</h3>
+                <div class="preview-zone empty" id="uploadedPreview"></div>
+            </div>
 
-            <!-- 1. Upload Image -->
-            <label class="upload-zone action-card" id="dropZone" for="imageInput">
-                <input id="imageInput" type="file" accept="image/*" hidden>
-                <span class="upload-icon"
-                    style="font-size: 2.5rem; margin-bottom: 12px; color: var(--accent-strong);">+</span>
-                <span class="upload-title" style="font-weight: 800; font-size: 1.2rem; margin-bottom: 8px;">Upload
-                    Image</span>
-                <span class="upload-subtitle" style="color: var(--muted);">Select Image</span>
-            </label>
+            <!-- Arrow 2 -->
+            <div class="workflow-arrow">→</div>
 
-            <!-- 2. Uploaded Image (Preview) -->
-            <div class="preview-card-container">
-                <div class="image-frame empty action-card preview-card" id="uploadedPreview">
-                    <span style="color: #888; font-size: 0.95rem;">Preview</span>
+            <!-- 3. Search -->
+            <div class="action-card glass-card search-card">
+                <h3 class="step-title">3. Search</h3>
+                <div class="search-btn-wrapper">
+                    <button id="searchBtn" type="button" class="search-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span>Search AI</span>
+                    </button>
+                    <p class="search-desc">Find similar gold ornaments<br>using AI similarity search</p>
                 </div>
             </div>
+        </div>
 
-            <!-- 3. Search Button -->
-            <div class="search-btn-container">
-                <button id="searchBtn" type="button" class="drop-button search-btn-responsive">
-                    Search
-                </button>
+        <!-- Status -->
+        <div class="status-container">
+            <p class="status-text" id="statusText">Upload an image to begin.</p>
+        </div>
+
+        <!-- Info Bar (Hidden initially) -->
+        <div class="info-bar glass-card" id="infoBar" style="display: none;">
+            <div class="info-item">
+                <div class="info-icon">🏷️</div>
+                <div class="info-text">
+                    <span class="info-label">Category</span>
+                    <span class="info-value" id="infoCategory">-</span>
+                </div>
             </div>
-
-        </div>
-
-        <!-- Status text -->
-        <div style="text-align: center; margin-bottom: 40px;">
-            <p class="status" id="statusText" style="color: var(--accent-strong); font-weight: bold; font-size: 1.2rem;">Select an image to
-                begin.</p>
-        </div>
-
-        <!-- EXACT MATCH SECTION -->
-        <div style="margin-bottom: 60px;">
-            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-bottom: 30px;">
-            <h2
-                style="text-align: center; letter-spacing: 0.2em; color: var(--text); font-weight: 800; font-size: 1.4rem;">
-                EXACT MATCH
-                <span id="categoryBadge"
-                    style="display: none; font-size: 0.5em; background: #FFD700; color: #000; padding: 4px 8px; border-radius: 4px; vertical-align: middle; margin-left: 10px;"></span>
-            </h2>
-
-            <div class="results-list" id="exactResultsList" style="margin-top: 40px;">
-                <div class="results-placeholder" style="width: 100%; text-align: center; color: var(--muted); grid-column: 1 / -1;">Your top
-                    matches will appear here.</div>
+            <div class="info-divider"></div>
+            <div class="info-item">
+                <div class="info-icon">🏆</div>
+                <div class="info-text">
+                    <span class="info-label">Best Match</span>
+                    <span class="info-value" id="infoBestMatch">-</span>
+                </div>
             </div>
-
-            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-top: 40px;">
-        </div>
-
-
-        <!-- SIMILARITY SEARCH RESULTS SECTION -->
-        <div id="similarImagesSection" style="display: none; margin-bottom: 60px;">
-            <h2
-                style="text-align: center; letter-spacing: 0.2em; color: var(--text); font-weight: 800; font-size: 1.4rem;">
-                SIMILARITY SEARCH RESULTS</h2>
-
-            <div class="results-list" id="similarResultsList" style="margin-top: 40px;">
+            <div class="info-divider"></div>
+            <div class="info-item">
+                <div class="info-icon">🖼️</div>
+                <div class="info-text">
+                    <span class="info-label">Found</span>
+                    <span class="info-value" id="infoResults">-</span>
+                </div>
             </div>
-
-            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-top: 40px;">
+            <div class="info-divider"></div>
+            <div class="info-item">
+                <div class="info-icon">⏱️</div>
+                <div class="info-text">
+                    <span class="info-label">Search Time</span>
+                    <span class="info-value" id="infoTime">-</span>
+                </div>
+            </div>
         </div>
 
+        <!-- Results: Exact Match -->
+        <div id="exactSection" class="results-section" style="display: none;">
+            <div class="section-divider">
+                ✨ Exact Match ✨
+            </div>
+            <div class="results-grid" id="exactResultsList"></div>
+        </div>
+
+        <!-- Results: Similar -->
+        <div id="similarSection" class="results-section" style="display: none;">
+            <div class="section-divider">
+                ✨ Similar Results ✨
+            </div>
+            <div class="results-grid" id="similarResultsList"></div>
+        </div>
     </main>
 
-    <!-- Result Item Template -->
+    <!-- Result Template -->
     <template id="resultTemplate">
-        <div class="result-row"
-            style="background: transparent; border: none; padding: 0; display: flex; flex-direction: column; align-items: center;">
-            <img class="result-image" alt="Similar ornament"
-                style="width: 220px; height: 220px; border-radius: 16px; margin-bottom: 12px; object-fit: contain; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div class="result-meta" style="font-size: 1.25rem; font-weight: 800; color: var(--text);">
-                <strong class="result-score"></strong>
+        <div class="result-card">
+            <div class="image-wrapper">
+                <img class="result-image" alt="Ornament Result">
+            </div>
+            <div class="badge-wrapper">
+                <span class="gold-badge result-score"></span>
             </div>
         </div>
     </template>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=7"></script>
 </body>
-
 </html>

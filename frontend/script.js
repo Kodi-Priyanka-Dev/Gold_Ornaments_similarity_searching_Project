@@ -4,12 +4,17 @@ const imageInput = document.getElementById('imageInput');
 const dropZone = document.getElementById('dropZone');
 const searchBtn = document.getElementById('searchBtn');
 const uploadedPreview = document.getElementById('uploadedPreview');
+const exactSection = document.getElementById('exactSection');
+const similarSection = document.getElementById('similarSection');
 const exactResultsList = document.getElementById('exactResultsList');
 const similarResultsList = document.getElementById('similarResultsList');
-const similarImagesSection = document.getElementById('similarImagesSection');
 const statusText = document.getElementById('statusText');
 const resultTemplate = document.getElementById('resultTemplate');
-const categoryBadge = document.getElementById('categoryBadge');
+const infoBar = document.getElementById('infoBar');
+const infoCategory = document.getElementById('infoCategory');
+const infoBestMatch = document.getElementById('infoBestMatch');
+const infoResults = document.getElementById('infoResults');
+const infoTime = document.getElementById('infoTime');
 
 let selectedFile = null;
 
@@ -19,7 +24,7 @@ function setStatus(message) {
 
 function clearUploadedPreview() {
   uploadedPreview.classList.add('empty');
-  uploadedPreview.innerHTML = '<span style="color: var(--muted); font-size: 0.95rem;">250 x 250 Preview</span>';
+  uploadedPreview.innerHTML = '<span class="preview-placeholder">Image Preview</span>';
 }
 
 function showUploadedPreview(file) {
@@ -30,32 +35,34 @@ function showUploadedPreview(file) {
   const image = document.createElement('img');
   image.src = imageUrl;
   image.alt = 'Uploaded preview';
-  image.style.width = '100%';
-  image.style.height = '100%';
-  image.style.objectFit = 'contain';
-  image.style.borderRadius = '8px';
 
   uploadedPreview.appendChild(image);
 }
 
 function clearResults() {
-  exactResultsList.innerHTML = '<div class="results-placeholder" style="width:100%; text-align:center; color: var(--muted);">Your top matches will appear here.</div>';
+  exactSection.style.display = 'none';
+  similarSection.style.display = 'none';
+  exactResultsList.innerHTML = '';
   similarResultsList.innerHTML = '';
-  similarImagesSection.style.display = 'none';
-  if (categoryBadge) categoryBadge.style.display = 'none';
+  infoBar.style.display = 'none';
 }
 
-function createResultRow(result) {
-  const row = resultTemplate.content.firstElementChild.cloneNode(true);
-  const image = row.querySelector('.result-image');
-  const score = row.querySelector('.result-score');
+function createResultCard(result) {
+  const card = resultTemplate.content.firstElementChild.cloneNode(true);
+  const image = card.querySelector('.result-image');
+  const score = card.querySelector('.result-score');
 
   const imageUrl = result.image_data_url || `${API_BASE}/images/${result.image_url}`;
   image.src = imageUrl;
-  score.textContent = `${Math.round(result.similarity * 100)}%`;
+  
+  // Format score
+  let simScore = result.similarity;
+  // If it's very close to 1.0, show 100%
+  if (simScore > 0.99) simScore = 1.0;
+  const percentage = Math.round(simScore * 100);
+  score.textContent = `${percentage}% Match`;
 
-  image.style.cursor = 'pointer';
-  image.addEventListener('click', async () => {
+  card.addEventListener('click', async () => {
     setStatus('Loading image...');
     try {
       const response = await fetch(imageUrl);
@@ -65,11 +72,7 @@ function createResultRow(result) {
       
       selectedFile = file;
       showUploadedPreview(file);
-      
-      // Automatically trigger a new search with this image
       runSearch();
-      
-      // Scroll to the top to see the uploaded image and progress
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error loading image:', error);
@@ -77,16 +80,23 @@ function createResultRow(result) {
     }
   });
 
-  return row;
+  return card;
 }
 
-function renderResults(results) {
+function renderResults(results, searchTimeMs, category) {
   exactResultsList.innerHTML = '';
   similarResultsList.innerHTML = '';
-  similarImagesSection.style.display = 'none';
+  exactSection.style.display = 'none';
+  similarSection.style.display = 'none';
+  infoBar.style.display = 'flex';
+
+  const timeSec = (searchTimeMs / 1000).toFixed(2);
 
   if (!results.length) {
-    clearResults();
+    infoBestMatch.textContent = '0%';
+    infoResults.textContent = '0 Images';
+    infoTime.textContent = `${timeSec} sec`;
+    infoCategory.textContent = category || 'Unknown';
     return;
   }
 
@@ -95,21 +105,29 @@ function renderResults(results) {
   const similarMatches = results.filter(r => r.similarity < EXACT_MATCH_THRESHOLD);
 
   if (exactMatches.length > 0) {
+    exactSection.style.display = 'block';
     exactMatches.forEach(result => {
-      exactResultsList.appendChild(createResultRow(result));
+      exactResultsList.appendChild(createResultCard(result));
     });
-  } else {
-    exactResultsList.innerHTML = '<div class="results-placeholder" style="width:100%; text-align:center; color: var(--muted);">No exact match found.</div>';
   }
 
   if (similarMatches.length > 0) {
-    similarImagesSection.style.display = 'block';
+    similarSection.style.display = 'block';
     similarMatches.forEach(result => {
-      similarResultsList.appendChild(createResultRow(result));
+      similarResultsList.appendChild(createResultCard(result));
     });
   }
-}
 
+  // Populate Info Bar
+  infoCategory.textContent = category || 'Unknown';
+  
+  let bestSim = results[0].similarity;
+  if (bestSim > 0.99) bestSim = 1.0;
+  infoBestMatch.textContent = `${Math.round(bestSim * 100)}%`;
+  
+  infoResults.textContent = `${results.length} Images`;
+  infoTime.textContent = `${timeSec} sec`;
+}
 
 async function runSearch() {
   if (!selectedFile) {
@@ -120,9 +138,11 @@ async function runSearch() {
   const formData = new FormData();
   formData.append('image', selectedFile);
   
-
   searchBtn.disabled = true;
-  setStatus(`Searching similar images...`);
+  setStatus(`Searching AI Database...`);
+  clearResults();
+
+  const startTime = performance.now();
 
   try {
     const response = await fetch(`${API_BASE}/search`, {
@@ -136,19 +156,13 @@ async function runSearch() {
     }
 
     const data = await response.json();
-    
-    if (data.predicted_category && categoryBadge) {
-      categoryBadge.textContent = data.predicted_category;
-      categoryBadge.style.display = 'inline-block';
-    } else if (categoryBadge) {
-      categoryBadge.style.display = 'none';
-    }
+    const endTime = performance.now();
+    const searchTimeMs = Math.round(endTime - startTime);
 
-    renderResults(data.results || []);
-    setStatus(`Found ${data.results.length} similar images.`);
+    renderResults(data.results || [], searchTimeMs, data.predicted_category);
+    setStatus(`Search complete.`);
   } catch (error) {
     setStatus(error.message);
-    clearResults();
   } finally {
     searchBtn.disabled = false;
   }
