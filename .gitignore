@@ -28,10 +28,7 @@ Thumbs.db
 # Large Data, Models, and Outputs
 *.pth
 *.pt
-*.npy
-*.pkl
 dataset/
-Embeddings/
 models/
 outputs/
 output/

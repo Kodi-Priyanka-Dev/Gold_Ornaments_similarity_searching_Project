@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Ornament Similarity Search</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="app-shell" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
+
+        <!-- Title Box -->
+        <div
+            style="text-align: center; border: 1px solid var(--panel-border); padding: 25px; border-radius: 12px; background: var(--panel); margin-bottom: 40px;">
+            <p class="eyebrow" style="margin-bottom: 8px;">GOLD ORNAMENTS </p>
+            <h1 style="color: #FFD700; font-size: 2.2rem; letter-spacing: 0.05em;">Gold Ornaments Similarity Searching
+            </h1>
+        </div>
+
+        <!-- Model Selection -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <label for="modelSelect" style="color: var(--text); font-weight: bold; margin-right: 10px;">Select Model:</label>
+            <select id="modelSelect" style="padding: 8px 12px; border-radius: 8px; background: rgba(20, 24, 33, 0.6); color: var(--text); border: 1px solid rgba(255, 215, 120, 0.4); font-size: 1rem; cursor: pointer;">
+                <option value="original">Original (Fine-Tuned)</option>
+                <option value="imagenet">ImageNet (Pre-Trained)</option>
+            </select>
+        </div>
+
+        <!-- 3 Column Layout Box -->
+        <div class="main-actions-row">
+
+            <!-- 1. Upload Image -->
+            <label class="upload-zone action-card" id="dropZone" for="imageInput">
+                <input id="imageInput" type="file" accept="image/*" hidden>
+                <span class="upload-icon"
+                    style="font-size: 2.5rem; margin-bottom: 12px; color: var(--accent-strong);">+</span>
+                <span class="upload-title" style="font-weight: 800; font-size: 1.2rem; margin-bottom: 8px;">Upload
+                    Image</span>
+                <span class="upload-subtitle" style="color: var(--muted);">Select Image</span>
+            </label>
+
+            <!-- 2. Uploaded Image (Preview) -->
+            <div class="preview-card-container">
+                <div class="image-frame empty action-card preview-card" id="uploadedPreview">
+                    <span style="color: #888; font-size: 0.95rem;">Preview</span>
+                </div>
+            </div>
+
+            <!-- 3. Search Button -->
+            <div class="search-btn-container">
+                <button id="searchBtn" type="button" class="drop-button search-btn-responsive">
+                    Search
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Status text -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <p class="status" id="statusText" style="color: var(--accent-strong); font-weight: bold; font-size: 1.2rem;">Select an image to
+                begin.</p>
+        </div>
+
+        <!-- EXACT MATCH SECTION -->
+        <div style="margin-bottom: 60px;">
+            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-bottom: 30px;">
+            <h2
+                style="text-align: center; letter-spacing: 0.2em; color: var(--text); font-weight: 800; font-size: 1.4rem;">
+                EXACT MATCH
+                <span id="categoryBadge"
+                    style="display: none; font-size: 0.5em; background: #FFD700; color: #000; padding: 4px 8px; border-radius: 4px; vertical-align: middle; margin-left: 10px;"></span>
+            </h2>
+
+            <div class="results-list" id="exactResultsList" style="margin-top: 40px;">
+                <div class="results-placeholder" style="width: 100%; text-align: center; color: var(--muted); grid-column: 1 / -1;">Your top
+                    matches will appear here.</div>
+            </div>
+
+            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-top: 40px;">
+        </div>
+
+
+        <!-- SIMILARITY SEARCH RESULTS SECTION -->
+        <div id="similarImagesSection" style="display: none; margin-bottom: 60px;">
+            <h2
+                style="text-align: center; letter-spacing: 0.2em; color: var(--text); font-weight: 800; font-size: 1.4rem;">
+                SIMILARITY SEARCH RESULTS</h2>
+
+            <div class="results-list" id="similarResultsList" style="margin-top: 40px;">
+            </div>
+
+            <hr style="border: 0; border-top: 3px solid rgba(255, 215, 120, 0.15); margin-top: 40px;">
+        </div>
+
+    </main>
+
+    <!-- Result Item Template -->
+    <template id="resultTemplate">
+        <div class="result-row"
+            style="background: transparent; border: none; padding: 0; display: flex; flex-direction: column; align-items: center;">
+            <img class="result-image" alt="Similar ornament"
+                style="width: 220px; height: 220px; border-radius: 16px; margin-bottom: 12px; object-fit: contain; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="result-meta" style="font-size: 1.25rem; font-weight: 800; color: var(--text);">
+                <strong class="result-score"></strong>
+            </div>
+        </div>
+    </template>
+
+    <script src="script.js?v=5"></script>
+</body>
+
+</html>
