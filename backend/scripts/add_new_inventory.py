@@ -77,7 +77,8 @@ if not images_to_process:
 
 print(f"Found {len(images_to_process)} images. Extracting features and uploading...")
 
-start_id = current_count + 1
+import uuid
+
 successful_uploads = 0
 
 for i, image_path in enumerate(tqdm(images_to_process)):
@@ -95,9 +96,26 @@ for i, image_path in enumerate(tqdm(images_to_process)):
         
         # Prepare for Qdrant
         abs_path = image_path.replace('\\', '/')
-        point_id = start_id + i
+        # Use UUID based on the file path to prevent duplicates on re-upload
+        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, abs_path))
         payload = {"image_url": abs_path}
         
+        # Perform similarity search also
+        try:
+            search_result = client.search(
+                collection_name=COLLECTION_NAME,
+                query_vector=vector,
+                limit=1
+            )
+            if search_result:
+                best_match = search_result[0]
+                print(f"  -> Similarity search: closest match is {best_match.payload.get('image_url')} with score {best_match.score:.4f}")
+                if best_match.score > 0.999:
+                    print(f"  -> Exact duplicate detected! Skipping {abs_path}")
+                    continue
+        except Exception as search_err:
+            print(f"  -> Similarity search skipped or failed: {search_err}")
+
         points_to_upsert.append(
             PointStruct(id=point_id, vector=vector, payload=payload)
         )

@@ -13,6 +13,7 @@ const liveActivity = document.getElementById('liveActivity');
 
 const actReading = document.getElementById('act-reading');
 const actExtracting = document.getElementById('act-extracting');
+const actSimilarity = document.getElementById('act-similarity');
 const actUploading = document.getElementById('act-uploading');
 const actComplete = document.getElementById('act-complete');
 
@@ -44,7 +45,7 @@ function setStatus(message) {
 }
 
 function resetActivity() {
-    [actReading, actExtracting, actUploading, actComplete].forEach(el => el.classList.remove('done'));
+    [actReading, actExtracting, actSimilarity, actUploading, actComplete].forEach(el => el.classList.remove('done'));
 }
 
 function handleFileSelection(files) {
@@ -99,7 +100,11 @@ uploadBtn.addEventListener('click', async () => {
                     actExtracting.classList.add('done');
                     setStatus('Extracting AI Features...');
                 }
-                if(simulatedProgress > 70 && !actUploading.classList.contains('done')) {
+                if(simulatedProgress > 55 && !actSimilarity.classList.contains('done')) {
+                    actSimilarity.classList.add('done');
+                    setStatus('Checking Similarity Search...');
+                }
+                if(simulatedProgress > 75 && !actUploading.classList.contains('done')) {
                     actUploading.classList.add('done');
                     setStatus('Uploading to Qdrant...');
                 }
@@ -125,6 +130,7 @@ uploadBtn.addEventListener('click', async () => {
         progressPercent.textContent = '100%';
         
         actExtracting.classList.add('done');
+        actSimilarity.classList.add('done');
         actUploading.classList.add('done');
         actComplete.classList.add('done');
         setStatus(data.message || 'Completed Successfully!');

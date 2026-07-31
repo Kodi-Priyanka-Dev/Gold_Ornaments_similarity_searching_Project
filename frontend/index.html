@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Ornament Similarity Search</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
     <main class="app-shell">
@@ -120,6 +120,10 @@
                 ✨ Similar Results ✨
             </div>
             <div class="results-grid" id="similarResultsList"></div>
+            
+            <div class="load-more-wrapper" id="loadMoreWrapper" style="display: none;">
+                <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+            </div>
         </div>
     </main>
 
@@ -128,6 +132,7 @@
         <div class="result-card">
             <div class="image-wrapper">
                 <img class="result-image" alt="Ornament Result">
+                <div class="result-count" style="display: none;"></div>
             </div>
             <div class="badge-wrapper">
                 <span class="gold-badge result-score"></span>
@@ -135,6 +140,6 @@
         </div>
     </template>
 
-    <script src="script.js?v=7"></script>
+    <script src="script.js?v=21"></script>
 </body>
 </html>

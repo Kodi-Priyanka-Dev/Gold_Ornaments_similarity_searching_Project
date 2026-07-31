@@ -15,8 +15,13 @@ const infoCategory = document.getElementById('infoCategory');
 const infoBestMatch = document.getElementById('infoBestMatch');
 const infoResults = document.getElementById('infoResults');
 const infoTime = document.getElementById('infoTime');
+const loadMoreWrapper = document.getElementById('loadMoreWrapper');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
 
 let selectedFile = null;
+let currentSimilarMatches = [];
+let currentSimilarIndex = 0;
+const ITEMS_PER_PAGE = 20;
 
 function setStatus(message) {
   statusText.textContent = message;
@@ -61,6 +66,12 @@ function createResultCard(result) {
   if (simScore > 0.99) simScore = 1.0;
   const percentage = Math.round(simScore * 100);
   score.textContent = `${percentage}% Match`;
+  
+  const countBadge = card.querySelector('.result-count');
+  if (result.count && result.count > 1 && countBadge) {
+      countBadge.textContent = `${result.count}`;
+      countBadge.style.display = 'flex';
+  }
 
   card.addEventListener('click', async () => {
     setStatus('Loading image...');
@@ -101,21 +112,46 @@ function renderResults(results, searchTimeMs, category) {
   }
 
   const EXACT_MATCH_THRESHOLD = 0.97;
-  const exactMatches = results.filter(r => r.similarity >= EXACT_MATCH_THRESHOLD);
-  const similarMatches = results.filter(r => r.similarity < EXACT_MATCH_THRESHOLD);
+  
+  // Group results by filename and similarity to handle duplicates in different folders
+  const groupedResults = [];
+  const uniqueMap = new Map();
+
+  results.forEach(result => {
+    // Round similarity to 4 decimal places to catch identical vectors
+    let simKey = result.similarity.toFixed(4);
+    let uniqueKey = simKey;
+
+    if (uniqueMap.has(uniqueKey)) {
+       const existing = uniqueMap.get(uniqueKey);
+       existing.count += 1;
+    } else {
+       result.count = 1;
+       uniqueMap.set(uniqueKey, result);
+       groupedResults.push(result);
+    }
+  });
+
+  // Cap the total unique results to 40 (so we have exactly 2 pages of 20 images)
+  const finalResults = groupedResults.slice(0, 40);
+
+  const exactMatches = finalResults.filter(r => r.similarity >= EXACT_MATCH_THRESHOLD);
+  const similarMatches = finalResults.filter(r => r.similarity < EXACT_MATCH_THRESHOLD);
 
   if (exactMatches.length > 0) {
     exactSection.style.display = 'block';
     exactMatches.forEach(result => {
-      exactResultsList.appendChild(createResultCard(result));
+        exactResultsList.appendChild(createResultCard(result));
     });
   }
 
+  currentSimilarMatches = similarMatches;
+  currentSimilarIndex = 0;
+  if (loadMoreWrapper) loadMoreWrapper.style.display = 'none';
+
   if (similarMatches.length > 0) {
     similarSection.style.display = 'block';
-    similarMatches.forEach(result => {
-      similarResultsList.appendChild(createResultCard(result));
-    });
+    renderNextBatch();
   }
 
   // Populate Info Bar
@@ -125,7 +161,7 @@ function renderResults(results, searchTimeMs, category) {
   if (bestSim > 0.99) bestSim = 1.0;
   infoBestMatch.textContent = `${Math.round(bestSim * 100)}%`;
   
-  infoResults.textContent = `${results.length} Images`;
+  infoResults.textContent = `${finalResults.length} Images`;
   infoTime.textContent = `${timeSec} sec`;
 }
 
@@ -212,6 +248,26 @@ dropZone.addEventListener('drop', (event) => {
   showUploadedPreview(file);
   setStatus(`Loaded ${file.name}`);
 });
+
+function renderNextBatch() {
+    if (!currentSimilarMatches || currentSimilarMatches.length === 0) return;
+    
+    const end = Math.min(currentSimilarIndex + ITEMS_PER_PAGE, currentSimilarMatches.length);
+    for (let i = currentSimilarIndex; i < end; i++) {
+        similarResultsList.appendChild(createResultCard(currentSimilarMatches[i]));
+    }
+    currentSimilarIndex = end;
+
+    if (currentSimilarIndex < currentSimilarMatches.length) {
+        if (loadMoreWrapper) loadMoreWrapper.style.display = 'flex';
+    } else {
+        if (loadMoreWrapper) loadMoreWrapper.style.display = 'none';
+    }
+}
+
+if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', renderNextBatch);
+}
 
 clearUploadedPreview();
 clearResults();

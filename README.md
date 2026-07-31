@@ -4,25 +4,27 @@
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?logo=PyTorch&logoColor=white)
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?logo=flask&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-red.svg)
 
-An AI-powered visual search engine designed to find similar gold jewelry from a large dataset in milliseconds. This project uses a deep learning model to extract image features and compute cosine similarities, wrapping it all in a beautiful, responsive, and glassmorphism-styled web interface.
+An AI-powered visual search engine designed to find similar gold jewelry from a large dataset in milliseconds. This project uses a deep learning model to extract image features, leveraging **Qdrant Vector Database** to compute cosine similarities. It wraps it all in a beautiful, responsive, and glassmorphism-styled web interface.
 
 ---
 
 ## ✨ Features
 
 - **AI-Powered Visual Search:** Utilizes a state-of-the-art **ConvNeXt Base** model via `timm` to extract rich feature embeddings from images.
-- **Blazing Fast Queries:** The deep learning model and 8,000+ dataset embeddings are loaded into memory globally upon server start, making search queries near-instantaneous.
+- **Blazing Fast Queries:** Embeddings are stored and queried using **Qdrant Vector Database**, making similarity search across thousands of images near-instantaneous.
 - **Premium UI/UX:** A custom-built, vanilla HTML/CSS/JS frontend featuring drag-and-drop uploads, sleek animations, and a responsive glassmorphic design.
+- **Luxurious Admin Dashboard:** A dedicated, premium black-and-gold admin interface for easily uploading and indexing new jewelry inventory.
 - **Smart Results Filtering:** Intelligently separates results into "Exact Matches" and "Similar Images" for intuitive browsing.
-- **Unified Server:** The Flask backend serves both the API and the web interface seamlessly on a single port.
+- **Unified Server:** The Flask backend serves both the API and the web interfaces seamlessly on a single port.
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **Machine Learning:** PyTorch, `timm` (ConvNeXt Base), NumPy, PIL (Pillow), Torchvision
-- **Backend:** Python, Flask, Flask-CORS, Werkzeug
+- **Backend & Database:** Python, Flask, Flask-CORS, Werkzeug, **Qdrant Vector Database**
 - **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6)
 
 ---
@@ -35,53 +37,41 @@ Gold searching/
 │   ├── api/
 │   │   └── routes.py             # Flask API endpoints (upload & image serving)
 │   ├── services/
-│   │   └── similarity_search.py  # Core ML inference and similarity logic
+│   │   └── similarity_search.py  # Core ML inference and Qdrant similarity logic
 │   ├── uploads/                  # Temporary storage for query images
 │   ├── app.py                    # Main Flask application entry point
 │   └── requirements.txt          # Backend dependencies
 ├── frontend/                     
-│   ├── index.html                # The web interface
+│   ├── index.html                # The main search web interface
 │   ├── style.css                 # Custom glassmorphism styling
-│   └── script.js                 # Drag-and-drop & API fetch logic
-├── main.py/                      # Original standalone ML scripts (training & extraction)
-├── dataset/                      # The local image dataset of gold ornaments
+│   ├── script.js                 # Search drag-and-drop & API fetch logic
+│   ├── admin.html                # Luxurious admin panel for uploading inventory
+│   ├── admin.css                 # Admin panel specific styling
+│   └── admin.js                  # Admin panel upload and progress tracking logic
+├── qdrant_db/                    # Local Qdrant vector database storage
 ├── models/                       # Stored model weights (e.g., best_model.pth)
-└── Embeddings/                   # Pre-computed dataset features (.npy, .pkl)
+├── BUILD.md                      # Detailed Installation and Deployment Guide
+└── README.md                     # This file
 ```
 
 ---
 
-## 🚀 Setup & Installation
+## 🚀 Setup, Installation, and Deployment
 
-### 1. Prerequisites
-Ensure you have Python 3.9+ installed on your machine.
+For comprehensive, step-by-step instructions on setting up the local environment, starting the application, and deploying it to a production server, please refer to the **[BUILD.md](BUILD.md)** guide.
 
-### 2. Install Dependencies
-Navigate to the root project directory and install the required machine learning and web packages:
-```powershell
-pip install -r requirements.txt
-```
-
-*(Note: Ensure your dataset, model weights (`models/`), and embeddings (`Embeddings/`) are correctly placed in their respective folders as outlined in the structure above).*
+### Quick Start (Development)
+1. Install dependencies: `pip install -r requirements.txt`
+2. Start the server: `cd backend && python app.py`
+3. Access Search: `http://localhost:5000/`
+4. Access Admin Panel: `http://localhost:5000/admin.html`
 
 ---
 
 ## 💻 Usage
 
-### 1. Start the Server
-The Flask backend handles both the machine learning model and serving the frontend. Start it up in your terminal:
-```powershell
-cd "backend"
-python app.py
-```
-*Note: The server takes about 5-10 seconds to start as it loads the deep learning model and all dataset embeddings into memory. Wait until you see `ML Service ready.` in the console.*
+### Search for Jewelry
+Drag and drop an image of a gold ornament into the main search upload zone, or click to browse. The UI will instantly display a preview, and the backend will process the image to return exact and similar matches from your dataset.
 
-### 2. Access the Application
-Open your web browser and navigate to:
-```text
-http://localhost:5000
-```
-*(If you want to access it from your mobile phone on the same Wi-Fi network, navigate to `http://<YOUR_COMPUTER_IP>:5000`)*
-
-### 3. Search!
-Drag and drop an image of a gold ornament into the upload zone, or click to browse. The UI will instantly display a preview, and the backend will process the image to return exact and similar matches from your dataset.
+### Upload New Inventory
+Navigate to the Admin Panel (`/admin.html`). Drag and drop images or select an entire folder of new gold ornaments. The AI will extract features and index them into Qdrant automatically.

@@ -31,7 +31,79 @@ def search():
 
         # 2. Run the actual ML model similarity search!
         model_type = request.form.get('model_type', 'imagenet')
-        results = find_similar(filepath, top_k=15, model_type=model_type)
+        # We fetch extra results (e.g., 100) because we will filter them by category and deduplicate them in frontend.
+        raw_results = find_similar(filepath, top_k=100, model_type=model_type)
+        
+        # --- SMART OVERRIDE FOR MISCLASSIFICATIONS ---
+        # Sometimes the custom classifier makes mistakes (e.g., Earring -> Necklace)
+        # We can use the top visual matches from Qdrant to correct it!
+        if len(raw_results) >= 5:
+            cat_counts = {"earring": 0, "necklace": 0, "ring": 0, "bangle": 0, "bracelet": 0, "anklet": 0}
+            for res in raw_results[:5]:
+                url_lower = res["image_url"].lower()
+                for c in cat_counts.keys():
+                    if c == "ring" and ("earring" in url_lower or "ear ring" in url_lower):
+                        if "ring" in url_lower.replace("earring", "").replace("ear ring", ""):
+                            cat_counts[c] += 1
+                    elif c in url_lower or (c == "earring" and "ear ring" in url_lower):
+                        cat_counts[c] += 1
+            
+            best_cat, max_count = max(cat_counts.items(), key=lambda x: x[1])
+            if max_count >= 3:
+                override_map = {
+                    "earring": "Earrings",
+                    "necklace": "Necklaces",
+                    "ring": "Rings",
+                    "bangle": "Bangles",
+                    "bracelet": "Bracelets",
+                    "anklet": "Hand Anklets"
+                }
+                predicted_category = override_map[best_cat]
+        # ---------------------------------------------
+        
+        # 3. Filter results to only include images from the predicted category (or generic paths)
+        results = []
+        pred = predicted_category.lower()
+        if pred == "earrings":
+            pred_terms = ["earring", "ear ring"]
+        elif pred == "necklaces":
+            pred_terms = ["necklace"]
+        elif pred == "rings":
+            pred_terms = ["ring"]
+        else:
+            pred_terms = [pred[:-1]] # Strip 's' for singular, e.g., 'bangles' -> 'bangle'
+            
+        all_cat_terms = ["earring", "ear ring", "necklace", "bangle", "bracelet", "ring", "anklet"]
+        
+        for res in raw_results:
+            url_lower = res["image_url"].lower()
+            
+            has_pred = any(term in url_lower for term in pred_terms)
+            if pred == "rings" and ("earring" in url_lower or "ear ring" in url_lower):
+                has_pred = "ring" in url_lower.replace("earring", "").replace("ear ring", "")
+                
+            if has_pred:
+                results.append(res)
+                continue
+                
+            has_other = False
+            for term in all_cat_terms:
+                if term in pred_terms:
+                    continue
+                if term in url_lower:
+                    if term == "ring" and ("earring" in url_lower or "ear ring" in url_lower):
+                        continue
+                    has_other = True
+                    break
+                    
+            if not has_other:
+                results.append(res)
+                
+        # Fallback: If strict category filtering removed all similar images 
+        # (e.g., due to the AI classification being slightly off for a new image),
+        # we fallback to the raw visually similar images so the user still gets results.
+        if len(results) <= 1:
+            results = raw_results
         
         # Cleanup uploaded file if desired, but we'll leave it for now
         # os.remove(filepath)
