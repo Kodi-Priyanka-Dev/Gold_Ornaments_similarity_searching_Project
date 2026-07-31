@@ -16,6 +16,10 @@ app.register_blueprint(api_blueprint, url_prefix='/api')
 def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/admin')
+def serve_admin():
+    return send_from_directory(app.static_folder, 'admin.html')
+
 if __name__ == '__main__':
     print("---------------------------------------")
     print(" Running with model: convnext_base")

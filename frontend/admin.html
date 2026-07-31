@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Inventory Admin</title>
+    <!-- Modern Poppins font for the premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <a href="/" class="back-link">← Back to Search</a>
+        
+        <header class="admin-header">
+            <h1 class="glow-text">🛡️ Gold Inventory Admin</h1>
+            <p>AI Powered Ornament Management<br>Upload new jewelry inventory to the AI database</p>
+            <div class="golden-divider"></div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- LEFT PANEL -->
+            <section class="panel glass-card left-panel">
+                <h2>📂 Upload Images or Folders</h2>
+                <div class="upload-zone" id="dropZoneFiles">
+                    <input id="imageInputFiles" type="file" accept="image/*" multiple hidden>
+                    <input id="imageInputFolder" type="file" accept="image/*" webkitdirectory directory multiple hidden>
+                    
+                    <p class="drag-text">Drag & Drop Images Here</p>
+                    <p class="or-text">or</p>
+                    
+                    <div class="upload-buttons">
+                        <button type="button" class="btn-outline" onclick="document.getElementById('imageInputFolder').click()">📁 Select Folder</button>
+                        <button type="button" class="btn-outline" onclick="document.getElementById('imageInputFiles').click()">🖼️ Select Images</button>
+                    </div>
+                    
+                    <div class="supported-formats">
+                        Supported Formats: <span>JPG</span> <span>PNG</span> <span>WEBP</span>
+                    </div>
+                </div>
+                
+                <div class="selected-count" id="selectedInfo" style="display: none;">
+                    <span id="fileCount">0</span> Images Selected
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL -->
+            <section class="panel glass-card right-panel">
+                <h2>Upload Progress</h2>
+                
+                <div class="progress-section">
+                    <div class="progress-bar-container" id="progressContainer">
+                        <div class="progress-bar-fill" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressPercent">0%</div>
+                </div>
+                
+                <div class="status-indicator" id="statusText">Ready to upload...</div>
+
+                <!-- Live Activity inside right panel as specified by "OPTIONAL PANEL" -->
+                <div class="live-activity" id="liveActivity" style="display:none;">
+                    <div class="activity-item" id="act-reading">Reading Images</div>
+                    <div class="activity-item" id="act-extracting">Extracting Features</div>
+                    <div class="activity-item" id="act-uploading">Uploading to Qdrant</div>
+                    <div class="activity-item" id="act-complete">Completed Successfully</div>
+                </div>
+
+                <button id="uploadBtn" class="btn-primary glow-btn">
+                    🚀 Upload & Index
+                </button>
+            </section>
+        </main>
+
+        <!-- BOTTOM SECTION -->
+        <section class="stats-row">
+            <div class="stat-card glass-card">
+                <div class="stat-icon">📁</div>
+                <div class="stat-info">
+                    <h3>Images Added</h3>
+                    <div class="stat-number" id="stat-images">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon">🧠</div>
+                <div class="stat-info">
+                    <h3>Embeddings Created</h3>
+                    <div class="stat-number" id="stat-embeddings">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon">💾</div>
+                <div class="stat-info">
+                    <h3>Stored in Qdrant</h3>
+                    <div class="stat-number" id="stat-qdrant">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <h3>Time Taken</h3>
+                    <div class="stat-number" id="stat-time">0 sec</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

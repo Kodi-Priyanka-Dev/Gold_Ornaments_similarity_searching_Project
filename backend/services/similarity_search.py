@@ -1,18 +1,17 @@
 import os
-import pickle
-import numpy as np
 from PIL import Image
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import timm
+from qdrant_client import QdrantClient
 
 # Paths
 MODEL_PATH = r"D:\Gold searching\models\best_model.pth"
-EMBEDDINGS_PATH = r"D:\Gold searching\Embeddings\image_features.npy"
-IMAGE_PATHS_PATH = r"D:\Gold searching\Embeddings\image_paths.pkl"
-IMAGENET_EMBEDDINGS_PATH = r"D:\Gold searching\Embeddings\imagenet_image_features.npy"
-IMAGENET_PATHS_PATH = r"D:\Gold searching\Embeddings\imagenet_image_paths.pkl"
+# Use absolute path for Qdrant DB to ensure it's found regardless of where app.py is run from
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+QDRANT_DB_PATH = os.path.join(BASE_DIR, "qdrant_db")
+COLLECTION_NAME = "gold_ornaments"
 NUM_CLASSES = 6
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,13 +22,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
-
-print("Loading Original ConvNeXt model into memory...")
-model = timm.create_model("convnext_base", pretrained=False, num_classes=NUM_CLASSES)
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-model.reset_classifier(0)
-model.to(device)
-model.eval()
 
 print("Loading ImageNet ConvNeXt model into memory...")
 model_imagenet = timm.create_model("convnext_base", pretrained=True, num_classes=0)
@@ -52,59 +44,51 @@ CLASS_NAMES = [
 ]
 CONFIDENCE_THRESHOLD = 0.70
 
-print("Loading original dataset embeddings into memory...")
-database_features = np.load(EMBEDDINGS_PATH)
-with open(IMAGE_PATHS_PATH, "rb") as f:
-    image_paths = pickle.load(f)
+from dotenv import load_dotenv
 
-print("Loading ImageNet dataset embeddings into memory...")
-if os.path.exists(IMAGENET_EMBEDDINGS_PATH):
-    database_features_imagenet = np.load(IMAGENET_EMBEDDINGS_PATH)
-    with open(IMAGENET_PATHS_PATH, "rb") as f:
-        image_paths_imagenet = pickle.load(f)
-else:
-    database_features_imagenet = None
-    image_paths_imagenet = None
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-print(f"ML Service ready. Loaded {len(image_paths)} original embeddings.")
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+print(f"Connecting to Qdrant Cloud...")
+qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 def find_similar(image_path, top_k=20, model_type="imagenet"):
     """
-    Given an image path, extracts features and computes cosine similarity
+    Given an image path, extracts features and queries Qdrant DB for cosine similarity.
+    Note: model_type is kept for backwards compatibility but we only use imagenet vectors now.
     """
     image = Image.open(image_path).convert("RGB")
     image = transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        if model_type == "imagenet" and database_features_imagenet is not None:
-            feature = model_imagenet(image)
-            db_features = database_features_imagenet
-            db_paths = image_paths_imagenet
-        else:
-            feature = model(image)
-            db_features = database_features
-            db_paths = image_paths
-            
+        feature = model_imagenet(image)
         feature = feature.view(feature.size(0), -1)
         feature = F.normalize(feature, p=2, dim=1)
     
-    query_feature = feature.squeeze().cpu().numpy()
+    query_vector = feature.squeeze().cpu().numpy().tolist()
     
-    # Compute cosine similarity (dot product of normalized vectors)
-    scores = np.dot(db_features, query_feature)
-    
-    # Sort descending
-    sorted_indices = np.argsort(scores)[::-1]
-    top_indices = sorted_indices[:top_k]
+    try:
+        # Search Qdrant
+        search_result = qdrant_client.search(
+            collection_name=COLLECTION_NAME,
+            query_vector=query_vector,
+            limit=top_k
+        )
+    except Exception as e:
+        print(f"Qdrant search error (Has the migration script been run?): {e}")
+        return []
     
     results = []
-    for rank, idx in enumerate(top_indices, 1):
-        abs_path = db_paths[idx].replace('\\', '/')
-        
+    for rank, hit in enumerate(search_result, 1):
+        # Qdrant returns scores. For cosine similarity, it's typically between -1 and 1.
+        # Since we use vectors with non-negative components for images typically, it ranges 0-1.
         results.append({
             "rank": rank,
-            "similarity": float(scores[idx]),
-            "image_url": abs_path 
+            "similarity": float(hit.score),
+            "image_url": hit.payload.get("image_url", "")
         })
         
     return results
