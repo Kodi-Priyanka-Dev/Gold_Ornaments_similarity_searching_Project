@@ -16,8 +16,23 @@ NUM_CLASSES = 6
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Initializing ML Service on device:", device)
+import torchvision.transforms.functional as F_vision
+
+class SquarePad:
+    def __call__(self, image):
+        w, h = image.size
+        max_wh = max(w, h)
+        # Pad left, top, right, bottom
+        padding = (
+            int((max_wh - w) / 2),
+            int((max_wh - h) / 2),
+            max_wh - w - int((max_wh - w) / 2),
+            max_wh - h - int((max_wh - h) / 2)
+        )
+        return F_vision.pad(image, padding, fill=255, padding_mode='constant')
 
 transform = transforms.Compose([
+    SquarePad(),
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -55,7 +70,9 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 print(f"Connecting to Qdrant Cloud...")
 qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
-def find_similar(image_path, top_k=20, model_type="imagenet"):
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+
+def find_similar(image_path, top_k=20, model_type="imagenet", category=None):
     """
     Given an image path, extracts features and queries Qdrant DB for cosine similarity.
     Note: model_type is kept for backwards compatibility but we only use imagenet vectors now.
@@ -70,11 +87,23 @@ def find_similar(image_path, top_k=20, model_type="imagenet"):
     
     query_vector = feature.squeeze().cpu().numpy().tolist()
     
+    query_filter = None
+    if category:
+        query_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="category",
+                    match=MatchValue(value=category)
+                )
+            ]
+        )
+    
     try:
         # Search Qdrant
         search_result = qdrant_client.search(
             collection_name=COLLECTION_NAME,
             query_vector=query_vector,
+            query_filter=query_filter,
             limit=top_k
         )
     except Exception as e:

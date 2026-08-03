@@ -30,7 +30,22 @@ print(f"Using Device : {device}")
 # IMAGE TRANSFORM
 # ==========================================================
 
+import torchvision.transforms.functional as F_vision
+
+class SquarePad:
+    def __call__(self, image):
+        w, h = image.size
+        max_wh = max(w, h)
+        padding = (
+            int((max_wh - w) / 2),
+            int((max_wh - h) / 2),
+            max_wh - w - int((max_wh - w) / 2),
+            max_wh - h - int((max_wh - h) / 2)
+        )
+        return F_vision.pad(image, padding, fill=255, padding_mode='constant')
+
 transform = transforms.Compose([
+    SquarePad(),
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(

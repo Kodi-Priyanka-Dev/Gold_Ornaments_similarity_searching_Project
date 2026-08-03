@@ -19,6 +19,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 NEW_INVENTORY_DIR = os.path.join(BASE_DIR, "backend", "new_inventory")
 COLLECTION_NAME = "gold_ornaments"
 
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from services.similarity_search import classify_image
+
 # ==========================================================
 # QDRANT CONNECTION
 # ==========================================================
@@ -43,7 +46,22 @@ except Exception as e:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using Device : {device}")
 
+import torchvision.transforms.functional as F_vision
+
+class SquarePad:
+    def __call__(self, image):
+        w, h = image.size
+        max_wh = max(w, h)
+        padding = (
+            int((max_wh - w) / 2),
+            int((max_wh - h) / 2),
+            max_wh - w - int((max_wh - w) / 2),
+            max_wh - h - int((max_wh - h) / 2)
+        )
+        return F_vision.pad(image, padding, fill=255, padding_mode='constant')
+
 transform = transforms.Compose([
+    SquarePad(),
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(
@@ -98,7 +116,10 @@ for i, image_path in enumerate(tqdm(images_to_process)):
         abs_path = image_path.replace('\\', '/')
         # Use UUID based on the file path to prevent duplicates on re-upload
         point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, abs_path))
-        payload = {"image_url": abs_path}
+        
+        # Predict category for payload filter
+        conf, predicted_cat = classify_image(abs_path)
+        payload = {"image_url": abs_path, "category": predicted_cat}
         
         # Perform similarity search also
         try:
