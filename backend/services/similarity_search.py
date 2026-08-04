@@ -72,7 +72,7 @@ qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 
-def find_similar(image_path, top_k=20, model_type="imagenet", category=None):
+def find_similar(image_path, top_k=20, offset=0, model_type="imagenet", category=None):
     """
     Given an image path, extracts features and queries Qdrant DB for cosine similarity.
     Note: model_type is kept for backwards compatibility but we only use imagenet vectors now.
@@ -104,7 +104,8 @@ def find_similar(image_path, top_k=20, model_type="imagenet", category=None):
             collection_name=COLLECTION_NAME,
             query_vector=query_vector,
             query_filter=query_filter,
-            limit=top_k
+            limit=top_k,
+            offset=offset
         )
     except Exception as e:
         print(f"Qdrant search error (Has the migration script been run?): {e}")
@@ -115,7 +116,7 @@ def find_similar(image_path, top_k=20, model_type="imagenet", category=None):
         # Qdrant returns scores. For cosine similarity, it's typically between -1 and 1.
         # Since we use vectors with non-negative components for images typically, it ranges 0-1.
         results.append({
-            "rank": rank,
+            "rank": rank + offset,
             "similarity": float(hit.score),
             "image_url": hit.payload.get("image_url", "")
         })

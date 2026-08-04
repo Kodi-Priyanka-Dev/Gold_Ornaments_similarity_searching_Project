@@ -31,8 +31,11 @@ def search():
 
         # 2. Run the actual ML model similarity search with strict category filtering!
         model_type = request.form.get('model_type', 'imagenet')
+        offset = int(request.form.get('offset', 0))
+        limit = int(request.form.get('limit', 20))
+        
         # Qdrant will natively filter the results to only match the predicted_category
-        results = find_similar(filepath, top_k=20, model_type=model_type, category=predicted_category)
+        results = find_similar(filepath, top_k=limit, offset=offset, model_type=model_type, category=predicted_category)
         
         # Cleanup uploaded file if desired, but we'll leave it for now
         # os.remove(filepath)

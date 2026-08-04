@@ -132,8 +132,8 @@ function renderResults(results, searchTimeMs, category) {
     }
   });
 
-  // Cap the total unique results to 40 (so we have exactly 2 pages of 20 images)
-  const finalResults = groupedResults.slice(0, 40);
+  // Do not cap results, let the user load as many as they want (up to limit)
+  const finalResults = groupedResults;
 
   const exactMatches = finalResults.filter(r => r.similarity >= EXACT_MATCH_THRESHOLD);
   const similarMatches = finalResults.filter(r => r.similarity < EXACT_MATCH_THRESHOLD);
@@ -161,7 +161,7 @@ function renderResults(results, searchTimeMs, category) {
   if (bestSim > 0.99) bestSim = 1.0;
   infoBestMatch.textContent = `${Math.round(bestSim * 100)}%`;
   
-  infoResults.textContent = `${finalResults.length} Images`;
+  // The 'Found' badge will be updated dynamically in renderNextBatch
   infoTime.textContent = `${timeSec} sec`;
 }
 
@@ -173,6 +173,7 @@ async function runSearch() {
 
   const formData = new FormData();
   formData.append('image', selectedFile);
+  formData.append('limit', 200); // Fetch 200 items so we can load many pages
   
   searchBtn.disabled = true;
   setStatus(`Searching AI Database...`);
@@ -257,6 +258,11 @@ function renderNextBatch() {
         similarResultsList.appendChild(createResultCard(currentSimilarMatches[i]));
     }
     currentSimilarIndex = end;
+    
+    // Dynamically update the 'Found' badge to show how many images are currently loaded on screen
+    const exactCount = exactSection.style.display === 'block' ? exactResultsList.children.length : 0;
+    const totalVisible = exactCount + currentSimilarIndex;
+    infoResults.textContent = `${totalVisible} Images`;
 
     if (currentSimilarIndex < currentSimilarMatches.length) {
         if (loadMoreWrapper) loadMoreWrapper.style.display = 'flex';
