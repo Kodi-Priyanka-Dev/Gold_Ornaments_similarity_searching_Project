@@ -30,10 +30,10 @@ elif QUERY_IMAGE.startswith("'") and QUERY_IMAGE.endswith("'"):
     QUERY_IMAGE = QUERY_IMAGE[1:-1]
 
 MODEL_PATH = r"D:\Gold searching\models\best_model.pth"
-EMBEDDINGS_PATH = r"D:\Gold searching\Embeddings\image_features.npy"
-IMAGE_PATHS_PATH = r"D:\Gold searching\Embeddings\image_paths.pkl"
+EMBEDDINGS_PATH = r"D:\Gold searching\Embeddings\imagenet_image_features.npy"
+IMAGE_PATHS_PATH = r"D:\Gold searching\Embeddings\imagenet_image_paths.pkl"
 
-NUM_CLASSES = 6
+NUM_CLASSES = 4
 TOP_K = 10
 
 # ==========================================================
@@ -62,14 +62,9 @@ transform = transforms.Compose([
 
 model = timm.create_model(
     "convnext_base",
-    pretrained=False,
-    num_classes=NUM_CLASSES
+    pretrained=True,
+    num_classes=0
 )
-
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-
-# Remove classifier
-model.reset_classifier(0)
 
 model.to(device)
 model.eval()

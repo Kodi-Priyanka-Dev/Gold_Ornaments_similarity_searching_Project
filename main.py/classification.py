@@ -17,15 +17,13 @@ IMAGE_PATH = r"D:\Gold searching\dataset\test\Bangles\020_0014.png"
 # SETTINGS
 # ==========================================
 
-NUM_CLASSES = 6
+NUM_CLASSES = 4
 
 CLASS_NAMES = [
     "Bangles",
     "Bracelets",
-    "Earrings",
-    "Hand Anklets",
-    "Necklaces",
-    "Rings"
+    "Ear Rings",
+    "necklace"
 ]
 
 CONFIDENCE_THRESHOLD = 0.70

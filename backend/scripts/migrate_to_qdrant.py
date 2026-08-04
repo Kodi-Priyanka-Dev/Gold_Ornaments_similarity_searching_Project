@@ -20,10 +20,8 @@ def extract_category(path):
     path_lower = path.lower()
     if 'bangle' in path_lower: return 'Bangles'
     if 'bracelet' in path_lower: return 'Bracelets'
-    if 'earring' in path_lower or 'ear ring' in path_lower: return 'Earrings'
-    if 'anklet' in path_lower: return 'Hand Anklets'
-    if 'necklace' in path_lower: return 'Necklaces'
-    if 'ring' in path_lower: return 'Rings'
+    if 'earring' in path_lower or 'ear ring' in path_lower: return 'Ear Rings'
+    if 'necklace' in path_lower: return 'necklace'
     return 'Unknown'
 
 def migrate():

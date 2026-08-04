@@ -59,7 +59,7 @@ transform = transforms.Compose([
 # LOAD MODEL
 # ==========================================================
 
-NUM_CLASSES = 6   # Change according to your dataset
+NUM_CLASSES = 4   # Change according to your dataset
 
 model = timm.create_model(
     "convnext_base",

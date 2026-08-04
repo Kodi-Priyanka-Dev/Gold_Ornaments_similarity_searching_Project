@@ -12,7 +12,7 @@ EPOCHS = 25
 LEARNING_RATE = 0.0001
 
 # Number of Classes
-NUM_CLASSES = 6
+NUM_CLASSES = 4
 
 # Model Save Paths - Use absolute paths
 import os

@@ -27,7 +27,7 @@ def search():
         # 1. Classification Check
         confidence, predicted_category = classify_image(filepath)
         if confidence < CONFIDENCE_THRESHOLD:
-            return jsonify({"error": "It is not a gold ornament. Please upload a valid image of gold ornaments like bangles, necklaces, earrings, or bracelets."}), 400
+            return jsonify({"error": "It is not a gold ornament. Please upload a valid image of gold ornaments like bangles, necklaces, ear rings, or bracelets."}), 400
 
         # 2. Run the actual ML model similarity search with strict category filtering!
         model_type = request.form.get('model_type', 'imagenet')

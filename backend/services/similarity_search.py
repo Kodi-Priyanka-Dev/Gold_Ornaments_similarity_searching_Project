@@ -12,7 +12,7 @@ MODEL_PATH = r"D:\Gold searching\models\best_model.pth"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 QDRANT_DB_PATH = os.path.join(BASE_DIR, "qdrant_db")
 COLLECTION_NAME = "gold_ornaments"
-NUM_CLASSES = 6
+NUM_CLASSES = 4
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Initializing ML Service on device:", device)
@@ -52,10 +52,8 @@ class_model.eval()
 CLASS_NAMES = [
     "Bangles",
     "Bracelets",
-    "Earrings",
-    "Hand Anklets",
-    "Necklaces",
-    "Rings"
+    "Ear Rings",
+    "necklace"
 ]
 CONFIDENCE_THRESHOLD = 0.70
 
