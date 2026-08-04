@@ -40,14 +40,6 @@ def migrate():
         
     total_images = len(paths)
         
-    # Load rich metadata if it exists
-    rich_metadata_path = os.path.join(BASE_DIR, "backend", "data", "rich_metadata.json")
-    rich_meta = {}
-    if os.path.exists(rich_metadata_path):
-        print(f"Loading rich metadata from {rich_metadata_path}...")
-        with open(rich_metadata_path, "r") as f:
-            rich_meta = json.load(f)
-            
     print(f"Loaded {total_images} records.")
     
     from dotenv import load_dotenv
@@ -73,19 +65,12 @@ def migrate():
     )
     
     from qdrant_client.http.models import PayloadSchemaType
-    print("Creating payload indexes for strict filtering...")
-    
-    # Create indexes for all searchable fields
-    index_fields = ["category", "sub_category", "metal", "stone_type", "collection"]
-    for field in index_fields:
-        try:
-            client.create_payload_index(
-                collection_name=COLLECTION_NAME,
-                field_name=field,
-                field_schema=PayloadSchemaType.KEYWORD
-            )
-        except Exception as e:
-            print(f"Warning: Failed to create index for {field}: {e}")
+    print("Creating payload index for 'category'...")
+    client.create_payload_index(
+        collection_name=COLLECTION_NAME,
+        field_name="category",
+        field_schema=PayloadSchemaType.KEYWORD
+    )
     
     print("Uploading points to Qdrant in batches...")
     batch_size = 100
@@ -98,17 +83,10 @@ def migrate():
             # Normalizing the path separators for consistency
             abs_path = paths[j].replace('\\', '/')
             
-            # Base Payload
+            # For the payload, we just store the absolute path as "image_url"
+            # just like the old similarity_search.py did
             cat = extract_category(abs_path)
             payload = {"image_url": abs_path, "category": cat}
-            
-            # Inject Generative AI Rich Metadata if it exists for this image
-            if abs_path in rich_meta:
-                ai_data = rich_meta[abs_path]
-                payload["sub_category"] = ai_data.get("sub_category", "Unknown")
-                payload["metal"] = ai_data.get("metal", "Unknown")
-                payload["stone_type"] = ai_data.get("stone_type", "Unknown")
-                payload["collection"] = ai_data.get("collection", "Unknown")
             
             # The features array is likely already normalized by torch.F.normalize
             vector = features[j].tolist()
